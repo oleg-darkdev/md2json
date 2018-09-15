@@ -1,31 +1,42 @@
-var path = require('path'),
+
+
+const options = {
+                minify: false,
+                width: 60,
+                outfile : 'build/header.json'
+            };
+
+const file = './src/header.md';
+
+
+
+const conv = (files, options) => {
+	const path = require('path'),
     os = require('os'),
     fs = require('fs'),
     marked = require('marked'),
     _ = require('lodash');
 
-exports.parse = function(files, options) {
+ 
+let      annotations = [];
 
-    var annotations = [];
 
-    _(files).each(function(file) {
-      var text = parseText(file);
-      var markdown = parseMarkdown(text);
-      annotations = annotations.concat(markdown);
-    });
 
-    writeFile(annotations, options);
+function parseText(file) {
 
-    function parseText(file) {
+      let text = fs.readFileSync(file, 'utf8');
+      let lines = text.split(os.EOL);
+      let pre = "-- ";
+      let annotation = {
 
-      var text = fs.readFileSync(file, 'utf8');
-      var lines = text.split(os.EOL);
-      var pre = "-- ";
-      var annotations = [];
-      var annotation = {
         'el': '',
         'title': '',
         'comment': ''
+		// 'Имя': '',
+	 //    'Github': '',
+	 //    'Email': '',
+	 //    'Slack': '',  
+	 //    'Other': ''
       };
 
       _(lines).each(function(line, i) {
@@ -39,7 +50,7 @@ exports.parse = function(files, options) {
               annotations.push(annotation);
             }
           } else {
-            annotation['comment'] = annotation.comment + line + "\n";
+            annotation['comment'] = annotation.comment + line ;
           }
       });
 
@@ -47,18 +58,14 @@ exports.parse = function(files, options) {
     }
 
 
-    function parseMarkdown(blocks) {
+// console.log(parseText(file));
+parseText(file);
 
-      _(blocks).each(function(block) {
-          block.comment = marked(block.comment);
-      });
 
-      return blocks;
-    }
 
-    function writeFile(annotations, options) {
+function writeFile(annotations, options) {
 
-      var json;
+      let json;
 
       if (options.minify) {
           json = JSON.stringify(annotations);
@@ -66,10 +73,10 @@ exports.parse = function(files, options) {
           json = JSON.stringify(annotations, null, 2) + "\n";
       }
 
-      var content = "var comments = { \"comments\":" + json + "};";
+      let content = "let comments = { \"comments\":" + json + "};";
 
       if (options.outfile) {
-          var file = fs.openSync(options.outfile, 'w+');
+          let file = fs.openSync(options.outfile, 'w+');
           fs.writeSync(file, content);
           fs.closeSync(file);
           return;
@@ -77,7 +84,11 @@ exports.parse = function(files, options) {
           return json;
       }
 
-    }
+}
 
+writeFile(annotations, options);
 
 };
+
+
+conv (file, options );
